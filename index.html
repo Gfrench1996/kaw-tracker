@@ -111,7 +111,14 @@
     <form id="dropForm">
         <div class="form-group">
             <label for="username">Player Username</label>
-            <input type="text" id="username" required placeholder="Enter exact game name">
+            <!-- Added autocomplete list attachment -->
+            <input type="text" id="username" list="clanRoster" required placeholder="Start typing name...">
+            <datalist id="clanRoster">
+                <!-- Add your active clan list here so the website can offer suggestions as you type -->
+                <option value="RoboBop">
+                <option value="DragonSlayer">
+                <option value="Gfrench1996">
+            </datalist>
         </div>
 
         <div class="form-group">
@@ -153,7 +160,7 @@
 
 <script>
     // Paste your Google Web App URL exactly inside the quotes below
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyhqZtShmlTW-HGhHIPrpBgN2b9RKKAH30uP1RyND076undyLWSepMpnTbKaDZJozn-3w/exec";
+    const WEB_APP_URL = "https://google.com";
 
     document.getElementById('dropForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -165,8 +172,7 @@
         submitButton.innerText = "Logging Drop...";
         statusDiv.style.display = "none";
 
-        // Build the URL with query parameters
-        const username = encodeURIComponent(document.getElementById('username').value);
+        const username = encodeURIComponent(document.getElementById('username').value.trim());
         const item = encodeURIComponent(document.getElementById('item').value);
         const quantity = encodeURIComponent(document.getElementById('quantity').value);
         const ebName = encodeURIComponent(document.getElementById('ebName').value);
@@ -174,11 +180,6 @@
 
         const finalUrl = `${WEB_APP_URL}?username=${username}&item=${item}&quantity=${quantity}&ebName=${ebName}&notes=${notes}`;
 
-        // Send data using JSONP approach to safely avoid CORS browser blocks
-        const script = document.createElement('script');
-        script.src = finalUrl;
-        
-        // Google web apps seamlessly handle generic GET execution via redirection
         fetch(finalUrl, { mode: 'no-cors' })
             .then(() => {
                 statusDiv.className = "success";
