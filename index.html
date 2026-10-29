@@ -15,7 +15,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
@@ -57,7 +57,7 @@
             font-size: 0.9rem;
         }
 
-        input[type="text"], input[type="number"], select, textarea {
+        select, input[type="number"], textarea {
             width: 100%;
             padding: 12px;
             background-color: var(--input-bg);
@@ -68,7 +68,7 @@
             box-sizing: border-box;
         }
 
-        input:focus, select:focus, textarea:focus {
+        select:focus, input:focus, textarea:focus {
             outline: none;
             border-color: var(--accent-color);
         }
@@ -102,6 +102,7 @@
 
         .success { background-color: #1c3d27; color: #57df84; }
         .error { background-color: #4a1d1d; color: #ff6b6b; }
+        .info { background-color: #1d2d44; color: #70b0ff; }
     </style>
 </head>
 <body>
@@ -110,15 +111,10 @@
     <h2>⚔️ Clan Drop Logger ⚔️</h2>
     <form id="dropForm">
         <div class="form-group">
-            <label for="username">Player Username</label>
-            <!-- Added autocomplete list attachment -->
-            <input type="text" id="username" list="clanRoster" required placeholder="Start typing name...">
-            <datalist id="clanRoster">
-                <!-- Add your active clan list here so the website can offer suggestions as you type -->
-                <option value="RoboBop">
-                <option value="DragonSlayer">
-                <option value="Gfrench1996">
-            </datalist>
+            <label for="username">Select Your Username</label>
+            <select id="username" required>
+                <option value="">-- Loading Member Roster --</option>
+            </select>
         </div>
 
         <div class="form-group">
@@ -152,27 +148,59 @@
             <textarea id="notes" rows="2" placeholder="e.g., Run #4, Admin verification"></textarea>
         </div>
 
-        <button type="submit">Log Drop to Spreadsheet</button>
+        <button type="submit" id="submitBtn" disabled>Loading Portal...</button>
     </form>
 
     <div id="statusMessage"></div>
 </div>
 
 <script>
-    // Paste your Google Web App URL exactly inside the quotes below
-    const WEB_APP_URL = "https://google.com";
+    // PASTE YOUR GOOGLE WEB APP EXEC URL HERE
+    const WEB_APP_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
+
+    // Fetch the live Roster immediately when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+        const userSelect = document.getElementById('username');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('statusMessage');
+
+        fetch(`${WEB_APP_URL}?action=getRoster`)
+            .then(res => res.json())
+            .then(data => {
+                userSelect.innerHTML = '<option value="">-- Select Member --</option>';
+                if(data.roster && data.roster.length > 0) {
+                    data.roster.forEach(name => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        userSelect.appendChild(opt);
+                    });
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Log Drop to Spreadsheet";
+                } else {
+                    userSelect.innerHTML = '<option value="">-- No Members Found in Roster Tab --</option>';
+                    submitBtn.innerText = "Check Sheet Roster Tab";
+                }
+            })
+            .catch(err => {
+                userSelect.innerHTML = '<option value="">-- Error Loading Roster --</option>';
+                statusDiv.className = "error";
+                statusDiv.innerText = "Could not sync roster list from Google Sheets.";
+                statusDiv.style.display = "block";
+            });
+    });
 
     document.getElementById('dropForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const submitButton = e.target.querySelector('button');
+        const submitButton = document.getElementById('submitBtn');
         const statusDiv = document.getElementById('statusMessage');
         
         submitButton.disabled = true;
         submitButton.innerText = "Logging Drop...";
         statusDiv.style.display = "none";
 
-        const username = encodeURIComponent(document.getElementById('username').value.trim());
+        const username = encodeURIComponent(document.getElementById('username').value);
         const item = encodeURIComponent(document.getElementById('item').value);
         const quantity = encodeURIComponent(document.getElementById('quantity').value);
         const ebName = encodeURIComponent(document.getElementById('ebName').value);
