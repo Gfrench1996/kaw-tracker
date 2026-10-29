@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaW Premium Drop Tracker</title>
+    <style>
+        :root {
+            --bg-color: #121214;
+            --card-bg: #1a1a1e;
+            --accent-color: #d4af37;
+            --text-color: #e1e1e6;
+            --input-bg: #29292e;
+            --button-hover: #aa8c2c;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .tracker-card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 450px;
+            border-top: 4px solid var(--accent-color);
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--input-bg);
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent-color);
+            color: #121214;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+        }
+
+        #statusMessage {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .success { background-color: #1c3d27; color: #57df84; }
+        .error { background-color: #4a1d1d; color: #ff6b6b; }
+    </style>
+</head>
+<body>
+
+<div class="tracker-card">
+    <h2>⚔️ Clan Drop Logger ⚔️</h2>
+    <form id="dropForm">
+        <div class="form-group">
+            <label for="username">Player Username</label>
+            <input type="text" id="username" required placeholder="Enter exact game name">
+        </div>
+
+        <div class="form-group">
+            <label for="item">Item Monitored</label>
+            <select id="item" required>
+                <option value="Seal of the Damned">Seal of the Damned</option>
+                <option value="Sign of the Tyrant">Sign of the Tyrant</option>
+                <option value="Blood Shemstone">Blood Shemstone</option>
+                <option value="Aevum Circle Piece">Aevum Circle Piece</option>
+                <option value="Event Chest">Event Chest / Box</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="quantity">Quantity Thrown / Dropped</label>
+            <input type="number" id="quantity" value="1" min="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="ebName">Epic Battle Name</label>
+            <select id="ebName" required>
+                <option value="The Moonlit Tyrant">The Moonlit Tyrant</option>
+                <option value="The Moonlit Tyrant (Crushing)">The Moonlit Tyrant (Crushing)</option>
+                <option value="Apheriun the Netherking">Apheriun the Netherking</option>
+                <option value="Zelgarad the Accursed">Zelgarad the Accursed</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Notes (Optional)</label>
+            <textarea id="notes" rows="2" placeholder="e.g., Run #4, Admin verification"></textarea>
+        </div>
+
+        <button type="submit">Log Drop to Spreadsheet</button>
+    </form>
+
+    <div id="statusMessage"></div>
+</div>
+
+<script>
+    // Paste your Google Web App URL exactly inside the quotes below
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyhqZtShmlTW-HGhHIPrpBgN2b9RKKAH30uP1RyND076undyLWSepMpnTbKaDZJozn-3w/exec";
+
+    document.getElementById('dropForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitButton = e.target.querySelector('button');
+        const statusDiv = document.getElementById('statusMessage');
+        
+        submitButton.disabled = true;
+        submitButton.innerText = "Logging Drop...";
+        statusDiv.style.display = "none";
+
+        // Build the URL with query parameters
+        const username = encodeURIComponent(document.getElementById('username').value);
+        const item = encodeURIComponent(document.getElementById('item').value);
+        const quantity = encodeURIComponent(document.getElementById('quantity').value);
+        const ebName = encodeURIComponent(document.getElementById('ebName').value);
+        const notes = encodeURIComponent(document.getElementById('notes').value);
+
+        const finalUrl = `${WEB_APP_URL}?username=${username}&item=${item}&quantity=${quantity}&ebName=${ebName}&notes=${notes}`;
+
+        // Send data using JSONP approach to safely avoid CORS browser blocks
+        const script = document.createElement('script');
+        script.src = finalUrl;
+        
+        // Google web apps seamlessly handle generic GET execution via redirection
+        fetch(finalUrl, { mode: 'no-cors' })
+            .then(() => {
+                statusDiv.className = "success";
+                statusDiv.innerText = "⚔️ Drop successfully logged to clan sheet!";
+                statusDiv.style.display = "block";
+                document.getElementById('username').value = "";
+                document.getElementById('notes').value = "";
+                document.getElementById('quantity').value = "1";
+            })
+            .catch(err => {
+                statusDiv.className = "error";
+                statusDiv.innerText = "Error contacting logging server.";
+                statusDiv.style.display = "block";
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.innerText = "Log Drop to Spreadsheet";
+            });
+    });
+</script>
+
+</body>
+</html>
